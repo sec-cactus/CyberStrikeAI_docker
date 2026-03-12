@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    image: csai:v0.1  # 确保这与你 build 的镜像名一致
+    container_name: cyberstrike-app
+    restart: always
+    # 如果 run.sh 需要写入权限，建议映射 config.yaml
+    # volumes:
+    #  - ./config.yaml:/opt/CyberStrikeAI/config.yaml
+    # app 容器不需要向宿主机暴露端口，由 nginx 内部访问
+    expose:
+      - "8080"
+    networks:
+      - cyberstrike-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: cyberstrike-proxy
+    restart: always
+    ports:
+      - "8888:4433"
+    volumes:
+      - ./nginx/csai.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - cyberstrike-net
+
+networks:
+  cyberstrike-net:
+    driver: bridge
